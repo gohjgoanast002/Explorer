@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>탐색기 연습실 - 폴더 열기, 이동, 찾기, 만들기, 정리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f7ff; --card:#ffffff; --ink:#14213d; --muted:#46557a; --line:#cfdcf7;
+  --blue:#3266e3; --blue2:#7466ff; --orange:#c9520f; --on-accent:#ffffff;
+  --stage:#f6f9ff; --stage-line:#b9cdf4; --badge-bg:#fff1c2; --badge-ink:#8a3b00;
+  --good:#1f9d55; --bad:#d64545; --edge:#8f9ebf; --glow:rgba(255,214,102,.30);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0e1530; --card:#172046; --ink:#eef2ff; --muted:#a9b6dc; --line:#2e3b70;
+    --blue:#5b8cff; --blue2:#8b7bff; --orange:#ff9a55; --on-accent:#0b1230;
+    --stage:#111a3b; --stage-line:#3a4b8a; --badge-bg:#4a3a12; --badge-ink:#ffdf8a;
+    --good:#4cc47f; --bad:#ff8080; --edge:#5a6cad; --glow:rgba(255,214,102,.10);
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif;font-weight:500;line-height:1.5;min-height:100vh}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:4px solid var(--blue);outline-offset:3px}
+.display{font-family:'Black Han Sans','Noto Sans KR','Malgun Gothic',sans-serif;font-weight:400;letter-spacing:.01em}
+
+.top{max-width:1180px;margin:0 auto;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{font-weight:800;font-size:18px;display:flex;gap:8px;align-items:center}
+.ghost{background:var(--card);border:3px solid var(--line);border-radius:999px;padding:6px 16px;font-weight:700;font-size:15px}
+main{max-width:1180px;margin:0 auto;padding:0 24px 64px}
+
+/* ---------- 위쪽 연습 고르기 ---------- */
+.strip{background:var(--card);border:3px solid var(--line);border-radius:34px;padding:14px 16px;margin-bottom:24px;display:flex;flex-wrap:wrap;gap:12px;justify-content:center;box-shadow:0 18px 40px -28px rgba(50,102,227,.5)}
+.chip{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:104px;padding:10px 14px 8px;border-radius:24px;border:3px solid transparent;background:color-mix(in srgb,var(--blue) 9%,var(--card));font-weight:800;line-height:1.25}
+.chip .cg{font-size:28px;height:34px;display:grid;place-items:center}
+.chip b{font-size:15px}
+.chip small{font-size:13px;color:var(--muted);font-weight:700}
+.chip[aria-pressed="true"]{background:linear-gradient(135deg,var(--blue),var(--blue2));color:var(--on-accent);box-shadow:0 12px 20px -12px rgba(70,90,240,.9)}
+.chip[aria-pressed="true"] small{color:var(--on-accent)}
+
+/* ---------- 연습 판 ---------- */
+.board{display:grid;grid-template-columns:minmax(300px,400px) 1fr;gap:28px;align-items:stretch}
+.mission-card{background:linear-gradient(180deg,var(--card),color-mix(in srgb,var(--card) 60%,var(--bg)));border:3px solid var(--line);border-radius:38px;padding:22px 22px 26px;display:flex;flex-direction:column;gap:16px;align-items:center;box-shadow:0 18px 40px -26px rgba(50,102,227,.5)}
+.title-row{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center;justify-content:center}
+.title-pill{margin:0;display:inline-flex;align-items:center;gap:12px;padding:6px 26px 6px 18px;border-radius:999px;background:var(--card);border:6px solid color-mix(in srgb,var(--blue) 55%,var(--line));font-size:clamp(24px,2.6vw,34px);line-height:1.25}
+.title-pill .g{font-size:.95em}
+.badge{background:var(--badge-bg);color:var(--badge-ink);font-weight:800;font-size:15px;padding:6px 16px;border-radius:999px}
+.mission{margin:0;text-align:center;font-size:17px;font-weight:700;color:var(--muted)}
+.mission b{color:var(--ink);font-weight:800}
+.tip{margin:0;text-align:center;font-size:15px;font-weight:700;color:var(--badge-ink);background:var(--badge-bg);border-radius:16px;padding:6px 14px}
+.dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center}
+.dots i{width:14px;height:14px;border-radius:50%;background:var(--line);transition:background .2s,transform .2s}
+.dots i.on{background:var(--good);transform:scale(1.15)}
+.dots span{font-weight:800;font-size:14px;color:var(--muted);margin-left:6px}
+
+/* 미니 탐색기 그림 (어느 부분을 쓰는지 보여 줘요) */
+.mini{width:min(100%,330px);background:#fff;color:#1f2a44;border-radius:12px;border:4px solid var(--edge);overflow:hidden;box-shadow:0 18px 30px -18px rgba(40,60,110,.6);font-size:13px;font-weight:700}
+.m-tools{display:flex;gap:5px;padding:7px;background:#f4f7fc;align-items:center}
+.m-tools i{width:28px;height:28px;border-radius:7px;background:#fff;border:1px solid #d5deef;display:grid;place-items:center;font-style:normal;font-size:15px;flex:none}
+.m-addr{flex:1;height:28px;border-radius:7px;background:#fff;border:1px solid #d5deef;display:flex;align-items:center;padding:0 8px;gap:4px;min-width:0;white-space:nowrap;overflow:hidden}
+.m-search{width:66px;height:28px;border-radius:7px;background:#fff;border:1px solid #d5deef;display:flex;align-items:center;justify-content:center;gap:2px;flex:none;color:#7a88a8;font-size:12px}
+.m-cmd{display:flex;gap:5px;padding:5px 7px;border-top:1px solid #e3e9f5;border-bottom:1px solid #e3e9f5}
+.m-cmd i{width:28px;height:24px;border-radius:6px;display:grid;place-items:center;font-style:normal;font-size:13px}
+.m-main{display:flex;height:92px}
+.m-side{width:86px;background:#fafcff;border-right:1px solid #e3e9f5;padding:6px;display:flex;flex-direction:column;gap:5px}
+.m-side s{display:block;height:11px;border-radius:4px;background:#dfe6f4;text-decoration:none}
+.m-list{flex:1;display:flex;flex-wrap:wrap;gap:6px;padding:8px;font-size:26px;align-content:flex-start}
+.m-list span{width:44px;text-align:center}
+.mini [class^="m-"],.mini .m-tools i,.m-cmd i{transition:background .2s,color .2s}
+.mini[data-hl~="back"] .m-back,.mini[data-hl~="fwd"] .m-fwd,.mini[data-hl~="up"] .m-up,
+.mini[data-hl~="new"] .m-new,.mini[data-hl~="cut"] .m-cut,.mini[data-hl~="copy"] .m-copy,
+.mini[data-hl~="paste"] .m-paste,.mini[data-hl~="rename"] .m-rename,.mini[data-hl~="delete"] .m-del{background:var(--blue);color:#fff;border-color:var(--blue);animation:pulse 1.2s ease-in-out infinite}
+.mini[data-hl~="addr"] .m-addr,.mini[data-hl~="search"] .m-search{box-shadow:0 0 0 3px var(--blue);border-color:var(--blue);animation:pulse 1.2s ease-in-out infinite}
+.mini[data-hl~="side"] .m-side{background:color-mix(in srgb,var(--blue) 22%,#fff);animation:pulse 1.2s ease-in-out infinite}
+.mini[data-hl~="list"] .m-list{background:color-mix(in srgb,var(--blue) 14%,#fff);animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{filter:none}50%{filter:brightness(1.18)}}
+
+/* ---------- 탐색기 ---------- */
+.stage{position:relative;min-height:600px;border:3px dashed var(--stage-line);border-radius:38px;overflow:hidden;padding:14px;display:flex;user-select:none;-webkit-user-select:none;
+  background:radial-gradient(circle at 50% 0%,var(--glow),transparent 50%),var(--stage)}
+.ex{position:relative;flex:1;display:flex;flex-direction:column;min-width:0;background:#fff;color:#1f2a44;border-radius:12px;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(20,40,90,.18),0 20px 40px -18px rgba(20,40,90,.5);--exline:#e3e9f5;--exbar:#f4f7fc}
+.ex-title{display:flex;gap:8px;align-items:center;height:36px;padding:0 14px;background:var(--exbar);font-weight:800;font-size:14px;border-bottom:1px solid var(--exline);flex:none}
+.ex-tools{display:flex;gap:6px;padding:8px 10px;align-items:center;border-bottom:1px solid var(--exline);flex:none}
+.tb{width:34px;height:34px;flex:none;border:0;border-radius:8px;background:transparent;font-size:18px;font-weight:800;color:#1f2a44;display:grid;place-items:center}
+.tb:hover:not(:disabled){background:#e9f0fd}
+.tb:disabled{opacity:.28;cursor:default}
+.addr{flex:1;min-width:0;height:34px;display:flex;align-items:center;gap:1px;border:1px solid #cfd8ea;border-radius:8px;padding:0 4px;overflow:hidden;background:#fff}
+.crumb{border:0;background:transparent;border-radius:6px;padding:3px 7px;font-size:14px;font-weight:700;white-space:nowrap;color:#1f2a44;flex:none}
+.crumb:hover{background:#e9f0fd}
+.sep{color:#8a97b4;flex:none}
+.srch{display:flex;align-items:center;gap:4px;width:200px;flex:none;height:34px;border:1px solid #cfd8ea;border-radius:8px;padding:0 6px 0 9px;background:#fff}
+.srch:focus-within{border-color:var(--blue);box-shadow:0 0 0 2px rgba(50,102,227,.25)}
+.srch input{border:0;outline:0;flex:1;min-width:0;font:inherit;font-size:14px;background:transparent;color:#1f2a44}
+.srch button{border:0;background:transparent;font-size:13px;color:#7a88a8;border-radius:6px;padding:2px 5px}
+.ex-cmd{display:flex;gap:2px;padding:5px 8px;border-bottom:1px solid var(--exline);overflow-x:auto;align-items:center;flex:none}
+.cb{border:0;background:transparent;border-radius:8px;padding:6px 10px;font-size:13px;font-weight:700;white-space:nowrap;color:#1f2a44}
+.cb:hover:not(.off){background:#e9f0fd}
+.cb.off{opacity:.36}
+.cmd-sep{width:1px;height:20px;background:var(--exline);margin:0 4px;flex:none}
+.grow{flex:1}
+.ex-main{flex:1;min-height:0;display:flex}
+.side{width:160px;flex:none;border-right:1px solid var(--exline);padding:6px;overflow:auto;background:#fafcff}
+.side h4{margin:8px 8px 3px;font-size:12px;color:#7a88a8;font-weight:800}
+.side-item{display:flex;gap:8px;align-items:center;width:100%;border:0;background:transparent;border-radius:8px;padding:6px 8px;font-size:14px;font-weight:600;text-align:left;white-space:nowrap}
+.side-item span:last-child{overflow:hidden;text-overflow:ellipsis}
+.side-item:hover{background:#eef4ff}
+.side-item.on{background:#dbe7fd}
+.side-item.drop,.it.drop{outline:2px dashed var(--blue);background:#e4eeff}
+.list{flex:1;min-width:0;overflow:auto;padding:8px;display:flex;flex-wrap:wrap;align-content:flex-start;gap:4px;position:relative}
+.it{position:relative;width:98px;padding:8px 4px 6px;border-radius:8px;text-align:center;font-size:13px;font-weight:600;border:1px solid transparent;cursor:default;touch-action:none}
+.it:hover{background:#eef4ff}
+.it.sel{background:#d3e4ff;border-color:#9dbdf5}
+.it.cut{opacity:.42}
+.it .ic{font-size:44px;line-height:1.15;display:block}
+.it .nm{display:block;word-break:break-all;line-height:1.25;max-height:2.6em;overflow:hidden}
+.list.det{display:block;padding:0}
+.hd{display:grid;grid-template-columns:minmax(140px,2fr) 1.3fr 1.2fr 76px;gap:8px;font-size:12px;color:#7a88a8;font-weight:800;padding:6px 12px;border-bottom:1px solid var(--exline);position:sticky;top:0;background:#fff;z-index:2}
+.list.det .it{width:auto;display:grid;grid-template-columns:minmax(140px,2fr) 1.3fr 1.2fr 76px;gap:8px;align-items:center;text-align:left;padding:5px 12px;border-radius:0}
+.list.det .cn{display:flex;gap:8px;align-items:center;min-width:0}
+.list.det .ic{font-size:22px;display:inline}
+.list.det .nm{max-height:none;white-space:nowrap;text-overflow:ellipsis}
+.list.det .cx{font-size:12.5px;color:#5a6a8f;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rn{width:100%;font:inherit;font-size:13px;font-weight:600;text-align:center;border:2px solid var(--blue);border-radius:4px;padding:2px 3px;outline:0;background:#fff;color:#1f2a44}
+.list.det .rn{text-align:left}
+.empty{margin:auto;color:#8a97b4;font-weight:700;padding:40px 10px;text-align:center;width:100%}
+.ex-status{height:30px;flex:none;display:flex;align-items:center;gap:16px;padding:0 14px;border-top:1px solid var(--exline);font-size:13px;color:#5a6a8f;background:var(--exbar)}
+.toast{position:absolute;left:50%;bottom:44px;transform:translateX(-50%);background:#1f2a44;color:#fff;padding:8px 18px;border-radius:999px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s;z-index:60;white-space:nowrap}
+.toast.on{opacity:1}
+.ctxm{position:absolute;z-index:50;min-width:176px;background:#fff;border:1px solid #cfd8ea;border-radius:10px;box-shadow:0 14px 30px -10px rgba(20,40,90,.55);padding:5px}
+.cm{display:flex;gap:8px;width:100%;border:0;background:transparent;text-align:left;padding:7px 10px;border-radius:6px;font-size:14px;font-weight:600;color:#1f2a44}
+.cm:hover:not(.off){background:#e4eeff}
+.cm.off{opacity:.38}
+.ctxm hr{border:0;border-top:1px solid #e3e9f5;margin:4px 0}
+.viewer{position:absolute;inset:0;z-index:40;display:grid;place-items:center;background:rgba(15,25,60,.45)}
+.vw{width:min(80%,360px);background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 24px 50px -12px rgba(0,10,40,.7)}
+.vw-t{display:flex;align-items:center;gap:8px;height:38px;padding-left:12px;background:var(--exbar);font-weight:800;font-size:14px}
+.vw-t span:nth-child(2){flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vw-x{width:46px;height:100%;border:0;background:transparent;font-size:16px}
+.vw-x:hover{background:#e5484d;color:#fff}
+.vw-b{padding:26px 18px 30px;text-align:center}
+.vw-b .big{font-size:78px;line-height:1.1}
+.vw-b p{margin:8px 0 0;font-weight:700;color:#3a4a6c}
+.ghost-drag{position:fixed;z-index:99999;pointer-events:none;background:#fff;border:1px solid #9dbdf5;border-radius:8px;padding:6px 12px;font-size:14px;font-weight:700;opacity:.95;box-shadow:0 12px 24px -8px rgba(20,40,90,.5);color:#1f2a44;white-space:nowrap}
+.flash{position:absolute;inset:0;z-index:70;display:grid;place-items:center;pointer-events:none;animation:flashy .95s ease forwards}
+.flash span{width:120px;height:120px;border-radius:50%;background:var(--good);color:#fff;display:grid;place-items:center;font-size:72px;font-weight:800;box-shadow:0 18px 40px -8px rgba(0,60,30,.6)}
+@keyframes flashy{0%{opacity:0;transform:scale(.5)}25%{opacity:1;transform:scale(1.08)}70%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1)}}
+.shake{animation:shake .38s ease}
+@keyframes shake{0%,100%{translate:0}20%{translate:-10px}40%{translate:10px}60%{translate:-7px}80%{translate:7px}}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.06)}100%{transform:scale(1)}}
+
+.win-ov{position:absolute;inset:0;z-index:200;display:grid;place-items:center;background:rgba(10,20,60,.55);backdrop-filter:blur(3px)}
+.win-card{background:var(--card);border:4px solid var(--line);border-radius:32px;padding:28px 36px;text-align:center;animation:pop .5s ease;max-width:88%}
+.win-card .we{font-size:64px;line-height:1.1}
+.win-card h3{margin:6px 0 4px;font-size:32px}
+.win-card p{margin:0 0 18px;color:var(--muted);font-weight:700}
+.win-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.win-actions button{border:3px solid var(--line);background:var(--card);border-radius:999px;padding:10px 22px;font-weight:800;font-size:17px}
+.win-actions button.main{background:linear-gradient(135deg,var(--blue),var(--blue2));border-color:transparent;color:var(--on-accent)}
+
+.bar{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;margin-top:24px}
+.primary{border:0;font-weight:800;font-size:20px;padding:16px 30px;border-radius:999px;color:#fff;background:linear-gradient(135deg,var(--blue),var(--blue2));box-shadow:0 12px 24px -10px rgba(70,90,240,.7)}
+@media (prefers-color-scheme: dark){.primary{color:#0b1230}}
+.primary:active{transform:translateY(2px)}
+.bar-text{display:flex;flex-direction:column}
+#hint{margin:0;font-size:19px;font-weight:800}
+.note{margin:0;font-size:14px;color:var(--muted)}
+
+@media (max-width:900px){
+  .board{grid-template-columns:1fr}
+  .stage{min-height:560px;padding:8px}
+  main{padding:0 16px 48px}
+  .top{padding:12px 16px}
+  .chip{min-width:92px;padding:8px 10px 6px}
+  .side{width:118px}
+  .srch{width:130px}
+}
+@media (prefers-reduced-motion: reduce){
+  .mini *,.mini{animation:none!important}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">🗂️ <span>탐색기 연습실</span></div>
+  <button class="ghost" id="soundBtn" aria-pressed="true">🔊 소리 켬</button>
+</header>
+
+<main>
+  <div class="strip" id="strip" role="group" aria-label="연습할 동작 고르기"></div>
+
+  <div class="board">
+    <aside class="mission-card">
+      <div class="title-row">
+        <h2 class="title-pill display" id="pill"><span class="g" id="pillG"></span><span id="pillT"></span></h2>
+        <span class="badge" id="badge"></span>
+      </div>
+      <div class="mini" id="mini" data-hl="list" aria-hidden="true">
+        <div class="m-tools"><i class="m-back">←</i><i class="m-fwd">→</i><i class="m-up">↑</i>
+          <div class="m-addr">내 PC <span>›</span> 문서</div><div class="m-search">🔍 검색</div></div>
+        <div class="m-cmd"><i class="m-new">＋</i><i class="m-cut">✂</i><i class="m-copy">⧉</i><i class="m-paste">📋</i><i class="m-rename">✏</i><i class="m-del">🗑</i></div>
+        <div class="m-main"><div class="m-side"><s></s><s></s><s></s><s></s></div><div class="m-list"><span>📁</span><span>📁</span><span>📄</span><span>🖼️</span></div></div>
+      </div>
+      <p class="mission"><b>미션:</b> <span id="mission"></span></p>
+      <p class="tip" id="tip"></p>
+      <div class="dots" id="dots" aria-live="polite"></div>
+    </aside>
+
+    <div class="stage" id="stage">
+      <div class="ex" id="ex">
+        <div class="ex-title"><span id="exIcon">💻</span><span id="exName">내 PC</span></div>
+        <div class="ex-tools">
+          <button class="tb" id="bBack" aria-label="뒤로">←</button>
+          <button class="tb" id="bFwd" aria-label="앞으로">→</button>
+          <button class="tb" id="bUp" aria-label="위로">↑</button>
+          <div class="addr" id="addr"></div>
+          <div class="srch"><span aria-hidden="true">🔍</span><input id="q" type="text" autocomplete="off" aria-label="검색"><button id="qx" aria-label="검색 지우기" hidden>✕</button></div>
+        </div>
+        <div class="ex-cmd" id="cmd">
+          <button class="cb" data-c="newfolder">📁 새 폴더</button><span class="cmd-sep"></span>
+          <button class="cb" data-c="cut">✂️ 잘라내기</button>
+          <button class="cb" data-c="copy">📑 복사</button>
+          <button class="cb" data-c="paste">📋 붙여넣기</button><span class="cmd-sep"></span>
+          <button class="cb" data-c="rename">✏️ 이름 바꾸기</button>
+          <button class="cb" data-c="delete">🗑️ 삭제</button>
+          <span class="grow"></span>
+          <button class="cb" id="bView">☰ 보기</button>
+        </div>
+        <div class="ex-main">
+          <nav class="side" id="side" aria-label="탐색 창"></nav>
+          <div class="list" id="list" tabindex="0" aria-label="파일 목록"></div>
+        </div>
+        <div class="ex-status" id="status"></div>
+        <div class="toast" id="toast" role="status"></div>
+        <div class="viewer" id="viewer" hidden></div>
+        <div class="ctxm" id="ctxm" hidden></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bar">
+    <button class="primary" id="againBtn">다시 하기</button>
+    <div class="bar-text">
+      <p id="hint" aria-live="polite"></p>
+      <p class="note">파일과 폴더는 모두 연습용 가짜예요. 마음껏 눌러 봐도 괜찮아요.</p>
+    </div>
+  </div>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- 종류 정보 ---------- */
+const KINDS={
+  open:{n:'OPEN',ko:'폴더 열기',en:'Open',glyph:'📂',badge:'폴더 열기'},
+  nav:{n:'NAVIGATE',ko:'이동하기',en:'Navigate',glyph:'🧭',badge:'길 찾기'},
+  find:{n:'FIND',ko:'찾기',en:'Find',glyph:'🔍',badge:'파일 찾기'},
+  create:{n:'CREATE',ko:'만들기',en:'Create',glyph:'📁',badge:'만들기'},
+  organize:{n:'ORGANIZE',ko:'정리하기',en:'Organize',glyph:'🗂️',badge:'정리하기'}
+};
+const MODES=['open','nav','find','create','organize','mixed'];
+
+/* ---------- 소리 ---------- */
+let soundOn=true, ac=null;
+function tone(f,d=.1,type='sine',v=.07,delay=0){
+  if(!soundOn) return;
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(), g=ac.createGain(), t=ac.currentTime+delay;
+    o.type=type; o.frequency.value=f;
+    g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+d+.03);
+  }catch(e){}
+}
+const sfx={
+  click:()=>tone(500,.05,'square',.03),
+  ok:()=>{tone(660,.1);tone(880,.14,'sine',.07,.08)},
+  no:()=>tone(180,.2,'triangle',.09),
+  win:()=>[523,659,784,1046].forEach((f,i)=>tone(f,.2,'sine',.07,i*.1))
+};
+$('#soundBtn').addEventListener('click',e=>{
+  soundOn=!soundOn;
+  e.currentTarget.textContent=soundOn?'🔊 소리 켬':'🔇 소리 끔';
+  e.currentTarget.setAttribute('aria-pressed',String(soundOn));
+});
+
+/* =========================================================
+   가짜 파일 시스템
+   ========================================================= */
+let nid=0, ALL=new Map(), root=null;
+function mk(name,type,kids,icon){
+  const n={id:++nid,name,type,kids:[],parent:null,icon:icon||null};
+  ALL.set(n.id,n);
+  (kids||[]).forEach(k=>{k.parent=n;n.kids.push(k)});
+  return n;
+}
+const D=(name,kids,icon)=>mk(name,'folder',kids,icon);
+const Fi=name=>mk(name,'file');
+function buildFS(){
+  nid=0; ALL=new Map();
+  root=mk('내 PC','root',[
+    D('바탕 화면',[Fi('오늘 할 일.txt'),Fi('우리반 사진.jpg')],'🖥️'),
+    D('다운로드',[Fi('설치파일.zip'),Fi('영수증.pdf'),Fi('강아지.jpg')],'📥'),
+    D('문서',[D('학교',[D('과제',[Fi('독후감.docx'),Fi('수학숙제.docx')]),Fi('시간표.xlsx')]),D('가족',[Fi('편지.txt')]),Fi('일기.txt')],'📄'),
+    D('사진',[D('여행',[D('제주도',[Fi('바다.jpg'),Fi('한라산.jpg')]),Fi('부산.jpg')]),D('생일파티',[Fi('케이크.jpg')]),Fi('고양이.jpg')],'🖼️'),
+    D('음악',[D('동요',[Fi('학교종.mp3')]),Fi('신나는 노래.mp3')],'🎵'),
+    D('동영상',[Fi('운동회.mp4')],'🎬'),
+    mk('로컬 디스크 (C:)','drive',[D('프로그램',[Fi('메모장.exe')]),D('사용자',[])]),
+    mk('새 볼륨 (D:)','drive',[D('백업',[Fi('사진백업.zip')])])
+  ],'💻');
+}
+const P=path=>path?path.split('/').reduce((n,nm)=>n&&n.kids.find(k=>k.name===nm),root):root;
+const byId=id=>ALL.get(id);
+const isDir=n=>n.type!=='file';
+const ext=name=>{const i=name.lastIndexOf('.');return i>0?name.slice(i+1).toLowerCase():''};
+const ICONS={jpg:'🖼️',png:'🖼️',txt:'📝',docx:'📘',xlsx:'📗',pdf:'📕',mp3:'🎵',mp4:'🎬',zip:'🗜️',exe:'⚙️'};
+const TYPES={jpg:'JPG 파일',png:'PNG 파일',txt:'텍스트 문서',docx:'Word 문서',xlsx:'Excel 문서',pdf:'PDF 문서',mp3:'MP3 파일',mp4:'MP4 동영상',zip:'압축 파일',exe:'응용 프로그램'};
+const iconOf=n=>n.icon||(n.type==='file'?(ICONS[ext(n.name)]||'📄'):n.type==='drive'?'💽':n.type==='root'?'💻':'📁');
+const typeOf=n=>n.type==='file'?(TYPES[ext(n.name)]||'파일'):n.type==='drive'?'로컬 디스크':n.type==='root'?'시스템 폴더':'파일 폴더';
+const dateOf=n=>`2025-0${1+n.id%9}-${String(10+(n.id*7)%18)}`;
+const sizeOf=n=>n.type==='file'?`${(n.id*37)%900+20} KB`:'';
+function pathOf(n){const a=[];for(let x=n;x;x=x.parent)a.unshift(x.name);return a.join(' › ')}
+function detach(n){n.parent.kids=n.parent.kids.filter(k=>k!==n)}
+function attach(n,p){p.kids.push(n);n.parent=p}
+function clone(n){
+  const c=mk(n.name,n.type,[],n.icon);
+  n.kids.forEach(k=>{const kc=clone(k);kc.parent=c;c.kids.push(kc)});
+  return c;
+}
+function uniq(p,name,kind){
+  const has=nm=>p.kids.some(k=>k.name.toLowerCase()===nm.toLowerCase());
+  if(!has(name)) return name;
+  if(kind==='new'){let i=2;while(has(`${name} (${i})`))i++;return `${name} (${i})`}
+  const e=ext(name), base=e?name.slice(0,-(e.length+1)):name;
+  const mkn=i=>`${base} - 복사${i>1?` (${i})`:''}${e?'.'+e:''}`;
+  let i=1;while(has(mkn(i)))i++;
+  return mkn(i);
+}
+function sortKids(a){
+  return a.slice().sort((x,y)=>(isDir(x)===isDir(y))?x.name.localeCompare(y.name,'ko'):(isDir(x)?-1:1));
+}
+function searchIn(n,q){
+  q=q.toLowerCase(); const out=[];
+  (function walk(x){x.kids.forEach(k=>{if(k.name.toLowerCase().includes(q))out.push(k);if(isDir(k))walk(k)})})(n);
+  return sortKids(out);
+}
+
+/* =========================================================
+   탐색기 상태와 화면
+   ========================================================= */
+const S={cwd:null,hist:[],hp:0,sel:new Set(),last:null,clip:null,search:'',edit:null,view:'icons',order:[]};
+let mode='open', tasks=[], idx=0, task=null, over=false, lock=false, tm=0, toastTm=0, drag=null;
+
+const ex=$('#ex'), listEl=$('#list'), stage=$('#stage');
+function hint(t){$('#hint').textContent=t}
+function progress(){
+  const N=tasks.length;
+  $('#dots').innerHTML=Array.from({length:N},(_,i)=>`<i class="${i<idx?'on':''}"></i>`).join('')+`<span>${idx} / ${N}</span>`;
+}
+function fx(el,cls){
+  el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+  const h=()=>{el.classList.remove(cls);el.removeEventListener('animationend',h)};
+  el.addEventListener('animationend',h);
+}
+function ui(o){
+  if(o.mission!==undefined) $('#mission').textContent=o.mission;
+  if(o.tip!==undefined) $('#tip').textContent=o.tip;
+  if(o.hint!==undefined) hint(o.hint);
+  if(o.hl!==undefined) $('#mini').dataset.hl=o.hl;
+}
+function setKindUI(kind){
+  const K=KINDS[kind];
+  $('#pillG').textContent=K.glyph; $('#pillT').textContent=K.n;
+  $('#badge').textContent=mode==='mixed'?'섞어서 연습':K.badge;
+}
+function wrong(msg){ sfx.no(); hint(msg); fx(ex,'shake'); }
+function toast(msg){
+  const t=$('#toast'); t.textContent=msg; t.classList.add('on');
+  clearTimeout(toastTm); toastTm=setTimeout(()=>t.classList.remove('on'),1600);
+}
+
+/* ---------- 위쪽 연습 고르기 ---------- */
+$('#strip').innerHTML=MODES.map(m=>{
+  const k=KINDS[m];
+  return `<button class="chip" data-m="${m}" aria-pressed="false"><span class="cg">${k?k.glyph:'🎲'}</span><b>${k?k.en:'Mix'}</b><small>${k?k.ko:'섞어서'}</small></button>`;
+}).join('');
+$('#strip').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  mode=b.dataset.m; b.blur(); start();
+});
+
+/* ---------- 그리기 ---------- */
+function startAt(path){
+  const n=P(path), chain=[];
+  for(let x=n;x;x=x.parent) chain.unshift(x);
+  S.hist=chain; S.hp=chain.length-1; S.cwd=n;
+  S.sel=new Set(); S.clip=null; S.search=''; S.edit=null; S.last=null;
+  $('#q').value='';
+}
+function selNodes(){return Array.from(S.sel).map(byId).filter(Boolean)}
+function selOne(){const a=selNodes();return a.length===1?a[0]:null}
+
+function renderTools(){
+  $('#bBack').disabled=S.hp<=0;
+  $('#bFwd').disabled=S.hp>=S.hist.length-1;
+  $('#bUp').disabled=!S.cwd.parent;
+  const chain=[]; for(let x=S.cwd;x;x=x.parent) chain.unshift(x);
+  $('#addr').innerHTML=chain.map((n,i)=>`${i?'<span class="sep">›</span>':''}<button class="crumb" data-id="${n.id}">${esc(n.name)}</button>`).join('');
+  $('#exName').textContent=S.cwd.name; $('#exIcon').textContent=iconOf(S.cwd);
+  $('#q').placeholder=`${S.cwd.name}에서 검색`;
+  $('#qx').hidden=!S.search;
+}
+function renderSide(){
+  const pinned=root.kids.filter(k=>k.type==='folder');
+  const drives=root.kids.filter(k=>k.type==='drive');
+  const item=n=>`<button class="side-item${S.cwd===n?' on':''}" data-id="${n.id}"><span>${iconOf(n)}</span><span>${esc(n.name)}</span></button>`;
+  $('#side').innerHTML=`<h4>즐겨찾기</h4>${pinned.map(item).join('')}<h4>내 PC</h4>${[root].concat(drives).map(item).join('')}`;
+}
+function itemHTML(n,details,searching){
+  const editing=S.edit&&S.edit.id===n.id;
+  const nameHTML=editing?`<input class="rn" id="rn" value="${esc(n.name)}" spellcheck="false" autocomplete="off">`:`<span class="nm">${esc(n.name)}</span>`;
+  const cls=`it${S.sel.has(n.id)?' sel':''}${S.clip&&S.clip.mode==='cut'&&S.clip.nodes.includes(n)?' cut':''}`;
+  const attrs=`class="${cls}" data-id="${n.id}" data-type="${isDir(n)?'folder':'file'}"`;
+  if(!details) return `<div ${attrs}><span class="ic">${iconOf(n)}</span>${nameHTML}</div>`;
+  const where=searching?esc(pathOf(n.parent)):dateOf(n);
+  return `<div ${attrs}><span class="cn"><span class="ic">${iconOf(n)}</span>${nameHTML}</span><span class="cx">${where}</span><span class="cx">${typeOf(n)}</span><span class="cx">${sizeOf(n)}</span></div>`;
+}
+function renderList(){
+  const searching=!!S.search;
+  const items=searching?searchIn(S.cwd,S.search):sortKids(S.cwd.kids);
+  S.order=items.map(n=>n.id);
+  const details=S.view==='details'||searching;
+  listEl.className='list'+(details?' det':'');
+  let h='';
+  if(details) h+=`<div class="hd"><span>이름</span><span>${searching?'위치':'수정한 날짜'}</span><span>유형</span><span>크기</span></div>`;
+  if(!items.length) h+=`<div class="empty">${searching?`"${esc(S.search)}"와(과) 일치하는 항목이 없어요.`:'이 폴더는 비어 있습니다.'}</div>`;
+  h+=items.map(n=>itemHTML(n,details,searching)).join('');
+  listEl.innerHTML=h;
+  const inp=$('#rn',listEl);
+  if(inp){
+    inp.focus();
+    const n=byId(S.edit.id), e=ext(n.name);
+    if(S.edit.mode==='rename'&&n.type==='file'&&e) inp.setSelectionRange(0,n.name.length-e.length-1);
+    else inp.select();
+  }
+}
+function updateCmd(){
+  const n=S.sel.size, one=n===1;
+  const off={cut:!n,copy:!n,rename:!one,delete:!n,paste:!S.clip};
+  $$('#cmd .cb[data-c]').forEach(b=>b.classList.toggle('off',!!off[b.dataset.c]));
+}
+function updateStatus(){
+  const total=S.search?searchIn(S.cwd,S.search).length:S.cwd.kids.length;
+  $('#status').innerHTML=`<span>${S.search?'검색 결과':'항목'} ${total}개</span>${S.sel.size?`<span>${S.sel.size}개 항목 선택함</span>`:''}${S.clip?`<span>${S.clip.mode==='cut'?'✂️ 잘라냄':'📑 복사함'}: ${S.clip.nodes.length}개</span>`:''}`;
+}
+function updateSel(){
+  $$('.it',listEl).forEach(el=>el.classList.toggle('sel',S.sel.has(+el.dataset.id)));
+  updateCmd(); updateStatus();
+}
+function render(){
+  renderTools(); renderSide(); renderList(); updateCmd(); updateStatus();
+  $('#bView').textContent=S.view==='details'?'▦ 큰 아이콘':'☰ 자세히';
+}
+
+/* ---------- 컨텍스트 메뉴, 파일 보기 ---------- */
+const menu=$('#ctxm');
+function hideMenu(){menu.hidden=true}
+function showMenu(x,y,kind){
+  const item=(c,label,off)=>`<button class="cm${off?' off':''}" data-c="${c}">${label}</button>`;
+  const one=S.sel.size>=1;
+  menu.innerHTML=kind==='item'
+    ?item('open','📂 열기',S.sel.size!==1)+'<hr>'+item('cut','✂️ 잘라내기')+item('copy','📑 복사')+'<hr>'+item('rename','✏️ 이름 바꾸기',S.sel.size!==1)+item('delete','🗑️ 삭제',!one)
+    :item('newfolder','📁 새로 만들기 › 폴더')+'<hr>'+item('paste','📋 붙여넣기',!S.clip);
+  menu.hidden=false;
+  const r=ex.getBoundingClientRect();
+  menu.style.left=Math.max(4,Math.min(x-r.left,r.width-190))+'px';
+  menu.style.top=Math.max(4,Math.min(y-r.top,r.height-menu.offsetHeight-6))+'px';
+}
+menu.addEventListener('click',e=>{
+  const b=e.target.closest('.cm'); if(!b||b.classList.contains('off')) return;
+  hideMenu();
+  const c=b.dataset.c;
+  if(c==='open'){const n=selOne(); if(n) doAction('open',{node:n,via:'ctx'})}
+  else doAction(c,{via:'ctx'});
+});
+const viewer=$('#viewer');
+function closeViewer(){viewer.hidden=true;viewer.innerHTML=''}
+function showViewer(n){
+  viewer.innerHTML=`<div class="vw"><div class="vw-t"><span>${iconOf(n)}</span><span>${esc(n.name)}</span><button class="vw-x" aria-label="닫기">✕</button></div><div class="vw-b"><div class="big">${iconOf(n)}</div><p>"${esc(n.name)}" 파일을 열었어요!</p></div></div>`;
+  viewer.hidden=false;
+}
+viewer.addEventListener('click',e=>{ if(e.target===viewer||e.target.closest('.vw-x')) closeViewer(); });
+
+/* =========================================================
+   동작 (탐색, 열기, 만들기, 정리)
+   ========================================================= */
+function emit(a,c){
+  if(over||lock||!task) return;
+  const r=task.onEvent&&task.onEvent.call(task,a,c||{});
+  if(r) roundDone();
+}
+function guardNav(method,sub){
+  if(over||lock) return true;
+  const t=task;
+  if(t.nav&&!t.nav.includes(method)){ wrong(t.navMsg||'이번에는 다른 방법으로 이동하는 연습이에요. 미션을 다시 읽어 봐요!'); return true; }
+  if(method==='open'&&t.openVia&&sub!==t.openVia){ wrong(t.openMsg||'이번에는 다른 방법으로 여는 연습이에요.'); return true; }
+  if(t.needSearch&&method==='open'&&!S.search){ wrong('이번에는 오른쪽 위 검색창에 글자를 써서 찾아 보세요.'); return true; }
+  return false;
+}
+const MODNAME={newfolder:'새 폴더 만들기',rename:'이름 바꾸기',delete:'삭제',copy:'복사',cut:'잘라내기',paste:'붙여넣기',move:'끌어서 옮기기'};
+function guardMod(a,ctx){
+  if(over||lock) return true;
+  if(!task.mod||!task.mod.includes(a)){ wrong(`이번 연습에서는 "${MODNAME[a]}"를 하지 않아요. 미션을 다시 읽어 봐요!`); return true; }
+  const m=task.can&&task.can.call(task,a,ctx);
+  if(m){ wrong(m); return true; }
+  return false;
+}
+function navTo(n,method,sub){
+  if(guardNav(method,sub)) return;
+  if(method==='back'){ if(S.hp<=0) return; S.hp--; n=S.hist[S.hp]; }
+  else if(method==='forward'){ if(S.hp>=S.hist.length-1) return; S.hp++; n=S.hist[S.hp]; }
+  else{
+    if(n===S.cwd&&!S.search) return;
+    S.hist=S.hist.slice(0,S.hp+1); S.hist.push(n); S.hp=S.hist.length-1;
+  }
+  S.cwd=n; S.search=''; $('#q').value=''; S.sel=new Set(); S.edit=null; S.last=null;
+  hideMenu(); sfx.click(); render(); listEl.scrollTop=0;
+  emit('nav',{node:n,method,sub});
+}
+function openFile(n,via){
+  if(over||lock) return;
+  if(task.openVia&&via!==task.openVia){ wrong(task.openMsg||'이번에는 다른 방법으로 여는 연습이에요.'); return; }
+  if(task.needSearch&&!S.search){ wrong('이번에는 오른쪽 위 검색창에 글자를 써서 찾은 파일을 열어요.'); return; }
+  sfx.click(); showViewer(n);
+  emit('openfile',{node:n,via});
+}
+function doAction(a,ctx){
+  if(over||lock||!task) return;
+  ctx=ctx||{};
+  const via=ctx.via||'btn';
+  hideMenu();
+  switch(a){
+    case 'open':{
+      const n=ctx.node||selOne();
+      if(!n){ wrong('먼저 열 파일이나 폴더를 한 번 클릭해서 선택해요.'); return; }
+      if(isDir(n)) navTo(n,'open',via); else openFile(n,via);
+      break;
+    }
+    case 'newfolder':{
+      if(S.cwd.type==='root'){ wrong('"내 PC"에서는 새 폴더를 만들 수 없어요. 폴더 안으로 들어가요.'); return; }
+      if(S.search){ wrong('검색 결과 화면에서는 새 폴더를 만들 수 없어요. 검색을 지우고 해요.'); return; }
+      if(guardMod('newfolder',{via})) return;
+      const nf=mk(uniq(S.cwd,'새 폴더','new'),'folder');
+      attach(nf,S.cwd);
+      S.sel=new Set([nf.id]); S.edit={id:nf.id,mode:'new'};
+      render(); hint('폴더 이름을 쓰고 Enter 키를 누르세요.');
+      break;
+    }
+    case 'rename':{
+      const n=selOne();
+      if(!n){ wrong('먼저 이름을 바꿀 파일이나 폴더를 한 번 클릭해서 선택해요.'); return; }
+      if(guardMod('rename',{node:n,via})) return;
+      S.edit={id:n.id,mode:'rename'}; render();
+      break;
+    }
+    case 'delete':{
+      const nodes=selNodes();
+      if(!nodes.length){ wrong('먼저 지울 파일이나 폴더를 한 번 클릭해서 선택해요.'); return; }
+      if(guardMod('delete',{nodes,via})) return;
+      nodes.forEach(detach); S.sel=new Set();
+      render(); toast('🗑️ 휴지통으로 이동했어요'); sfx.click();
+      emit('delete',{nodes,via});
+      break;
+    }
+    case 'copy': case 'cut':{
+      const nodes=selNodes();
+      if(!nodes.length){ wrong('먼저 파일이나 폴더를 한 번 클릭해서 선택해요.'); return; }
+      if(guardMod(a,{nodes,via})) return;
+      S.clip={nodes,mode:a}; renderList(); updateCmd(); updateStatus();
+      toast(a==='copy'?'📑 복사했어요. 다른 폴더에서 붙여넣기를 해요.':'✂️ 잘라냈어요. 다른 폴더에서 붙여넣기를 해요.'); sfx.click();
+      emit(a,{nodes,via});
+      break;
+    }
+    case 'paste':{
+      if(!S.clip){ wrong('먼저 복사(📑)나 잘라내기(✂️)를 해야 붙여넣을 수 있어요.'); return; }
+      if(S.cwd.type==='root'){ wrong('"내 PC"에는 붙여넣을 수 없어요. 폴더 안으로 들어가요.'); return; }
+      const clip=S.clip;
+      if(guardMod('paste',{to:S.cwd,mode:clip.mode,nodes:clip.nodes,via})) return;
+      const made=[];
+      clip.nodes.forEach(n=>{
+        if(clip.mode==='copy'){ const c=clone(n); c.name=uniq(S.cwd,n.name); attach(c,S.cwd); made.push(c); }
+        else if(n.parent!==S.cwd){ detach(n); n.name=uniq(S.cwd,n.name); attach(n,S.cwd); made.push(n); }
+      });
+      if(clip.mode==='cut') S.clip=null;
+      S.sel=new Set(made.map(n=>n.id)); S.search='';$('#q').value='';
+      render(); toast('📋 붙여넣었어요'); sfx.click();
+      emit('paste',{to:S.cwd,mode:clip.mode,nodes:clip.nodes,via});
+      break;
+    }
+    case 'move':{
+      const nodes=ctx.nodes, to=ctx.to;
+      if(!nodes||!nodes.length||!to) return;
+      if(to.type==='root'){ wrong('"내 PC"에는 옮길 수 없어요. 폴더나 드라이브에 놓아요.'); return; }
+      if(nodes.includes(to)) return;
+      if(nodes.every(n=>n.parent===to)){ hint('이미 그 폴더 안에 있어요.'); return; }
+      if(guardMod('move',{nodes,to,via})) return;
+      nodes.forEach(n=>{ detach(n); n.name=uniq(to,n.name); attach(n,to); });
+      S.sel=new Set(); render();
+      toast(`📦 "${to.name}" 폴더로 옮겼어요`); sfx.click();
+      emit('move',{nodes,to,via});
+      break;
+    }
+  }
+}
+
+/* ---------- 이름 입력 ---------- */
+function commitEdit(fromBlur){
+  const ed=S.edit; if(!ed) return;
+  const inp=$('#rn',listEl); if(!inp) return;
+  const n=byId(ed.id), name=inp.value.trim();
+  const refocus=()=>{ if(fromBlur) setTimeout(()=>{ const i=$('#rn',listEl); if(i) i.focus(); },0); };
+  if(!name){ wrong('이름을 써 주세요.'); refocus(); return; }
+  if(/[\\/:*?"<>|]/.test(name)){ wrong('이름에 \\ / : * ? " < > | 글자는 쓸 수 없어요.'); refocus(); return; }
+  if(n.parent.kids.some(k=>k!==n&&k.name.toLowerCase()===name.toLowerCase())){ wrong('같은 이름이 이미 있어요. 다른 이름을 써요.'); refocus(); return; }
+  const m=task.can&&task.can.call(task,'commit',{mode:ed.mode,node:n,name});
+  if(m){ wrong(m); refocus(); return; }
+  n.name=name; S.edit=null; render(); sfx.ok();
+  emit(ed.mode==='new'?'newfolder':'rename',{node:n,name});
+}
+function cancelEdit(){
+  const ed=S.edit; if(!ed) return;
+  const n=byId(ed.id);
+  if(ed.mode==='new'){ detach(n); S.sel=new Set(); }
+  S.edit=null; render();
+}
+listEl.addEventListener('keydown',e=>{
+  if(e.target.id!=='rn') return;
+  e.stopPropagation();
+  if(e.key==='Enter'){ e.preventDefault(); commitEdit(false); }
+  else if(e.key==='Escape'){ e.preventDefault(); cancelEdit(); }
+});
+listEl.addEventListener('focusout',e=>{
+  if(e.target.id!=='rn') return;
+  if(S.edit&&!over&&!lock) commitEdit(true);
+});
+
+/* ---------- 목록 조작 ---------- */
+listEl.addEventListener('pointerdown',e=>{
+  hideMenu();
+  if(e.button!==0||S.edit) return;
+  const it=e.target.closest('.it');
+  if(!it){ if(S.sel.size){S.sel=new Set();updateSel()} return; }
+  const id=+it.dataset.id;
+  if(e.ctrlKey||e.metaKey){ if(S.sel.has(id)) S.sel.delete(id); else S.sel.add(id); S.last=id; }
+  else if(e.shiftKey&&S.last!=null){
+    const a=S.order.indexOf(S.last), b=S.order.indexOf(id);
+    if(a>=0&&b>=0){ S.sel=new Set(S.order.slice(Math.min(a,b),Math.max(a,b)+1)); }
+  }
+  else{ if(!S.sel.has(id)) S.sel=new Set([id]); S.last=id; }
+  updateSel();
+  if(e.ctrlKey||e.metaKey||e.shiftKey) return;
+  startDrag(e,id);
+});
+function dropTargetAt(x,y){
+  const els=(document.elementsFromPoint?document.elementsFromPoint(x,y):[]);
+  for(const el of els){
+    if(el.classList&&el.dataset&&el.dataset.id&&(el.classList.contains('side-item')||(el.classList.contains('it')&&el.dataset.type==='folder'))){
+      const n=byId(+el.dataset.id);
+      if(n&&isDir(n)&&!S.sel.has(n.id)) return {el,node:n};
+    }
+  }
+  return null;
+}
+function startDrag(e,id){
+  const sx=e.clientX, sy=e.clientY; let started=false, ghost=null, hot=null;
+  const nodes=()=>selNodes();
+  const mv=ev=>{
+    if(!started&&Math.hypot(ev.clientX-sx,ev.clientY-sy)>6){
+      started=true; drag=true;
+      const ns=nodes(); ghost=document.createElement('div'); ghost.className='ghost-drag';
+      ghost.textContent=`${iconOf(byId(id))} ${byId(id).name}${ns.length>1?` 외 ${ns.length-1}개`:''}`;
+      document.body.appendChild(ghost);
+    }
+    if(started){
+      ghost.style.left=(ev.clientX+12)+'px'; ghost.style.top=(ev.clientY+8)+'px';
+      const t=dropTargetAt(ev.clientX,ev.clientY);
+      if(hot&&(!t||t.el!==hot)) hot.classList.remove('drop');
+      hot=t?t.el:null; if(hot) hot.classList.add('drop');
+    }
+  };
+  const up=ev=>{
+    document.removeEventListener('pointermove',mv);
+    document.removeEventListener('pointerup',up);
+    document.removeEventListener('pointercancel',up);
+    if(!started) return;
+    if(ghost) ghost.remove(); if(hot) hot.classList.remove('drop');
+    const t=dropTargetAt(ev.clientX,ev.clientY);
+    setTimeout(()=>{drag=null},0);
+    if(t) doAction('move',{nodes:nodes(),to:t.node});
+  };
+  document.addEventListener('pointermove',mv);
+  document.addEventListener('pointerup',up);
+  document.addEventListener('pointercancel',up);
+}
+listEl.addEventListener('dblclick',e=>{
+  if(S.edit||drag) return;
+  const it=e.target.closest('.it'); if(!it) return;
+  doAction('open',{node:byId(+it.dataset.id),via:'dbl'});
+});
+listEl.addEventListener('contextmenu',e=>{
+  e.preventDefault(); if(over||lock||S.edit) return;
+  const it=e.target.closest('.it');
+  if(it){ const id=+it.dataset.id; if(!S.sel.has(id)){S.sel=new Set([id]);updateSel()} showMenu(e.clientX,e.clientY,'item'); }
+  else{ S.sel=new Set(); updateSel(); showMenu(e.clientX,e.clientY,'blank'); }
+});
+ex.addEventListener('contextmenu',e=>{ if(!listEl.contains(e.target)) e.preventDefault(); });
+document.addEventListener('pointerdown',e=>{ if(!menu.hidden&&!menu.contains(e.target)) hideMenu(); });
+
+/* ---------- 위쪽 도구 ---------- */
+$('#bBack').addEventListener('click',()=>navTo(null,'back'));
+$('#bFwd').addEventListener('click',()=>navTo(null,'forward'));
+$('#bUp').addEventListener('click',()=>{ if(S.cwd.parent) navTo(S.cwd.parent,'up'); });
+$('#addr').addEventListener('click',e=>{
+  const b=e.target.closest('.crumb'); if(!b) return;
+  const n=byId(+b.dataset.id); if(n===S.cwd&&!S.search) return;
+  navTo(n,'addr');
+});
+$('#side').addEventListener('click',e=>{
+  const b=e.target.closest('.side-item'); if(!b) return;
+  navTo(byId(+b.dataset.id),'side');
+});
+$('#q').addEventListener('input',e=>{
+  if(over||lock) return;
+  S.search=e.target.value.trim(); S.sel=new Set(); S.last=null;
+  renderTools(); renderList(); updateCmd(); updateStatus();
+  if(S.search) hint('검색 결과가 나왔어요. 찾는 것을 더블클릭하세요.');
+});
+$('#q').addEventListener('keydown',e=>{ if(e.key==='Escape') $('#qx').click(); e.stopPropagation(); });
+$('#qx').addEventListener('click',()=>{ $('#q').value=''; S.search=''; renderTools(); renderList(); updateCmd(); updateStatus(); });
+$('#cmd').addEventListener('click',e=>{
+  const b=e.target.closest('.cb'); if(!b) return;
+  if(b.id==='bView'){ S.view=S.view==='details'?'icons':'details'; render(); return; }
+  if(b.classList.contains('off')){
+    const c=b.dataset.c;
+    hint(c==='paste'?'먼저 복사(📑)나 잘라내기(✂️)를 해야 붙여넣을 수 있어요.':'먼저 파일이나 폴더를 한 번 클릭해서 선택해요.'); sfx.no(); return;
+  }
+  doAction(b.dataset.c,{via:'btn'});
+});
+
+/* ---------- 키보드 ---------- */
+document.addEventListener('keydown',e=>{
+  if(over||lock||!task) return;
+  const tg=e.target; if(tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA')) return;
+  if(!viewer.hidden){ if(e.key==='Escape') closeViewer(); return; }
+  const k=e.key, mod=e.ctrlKey||e.metaKey;
+  if(k==='Escape'){ hideMenu(); return; }
+  if(mod&&/^c$/i.test(k)){ e.preventDefault(); doAction('copy',{via:'key'}); }
+  else if(mod&&/^x$/i.test(k)){ e.preventDefault(); doAction('cut',{via:'key'}); }
+  else if(mod&&/^v$/i.test(k)){ e.preventDefault(); doAction('paste',{via:'key'}); }
+  else if(k==='F2'){ e.preventDefault(); doAction('rename',{via:'key'}); }
+  else if(k==='Delete'){ e.preventDefault(); doAction('delete',{via:'key'}); }
+  else if(k==='Enter'){ const n=selOne(); if(n){ e.preventDefault(); doAction('open',{node:n,via:'enter'}); } }
+  else if(k==='Backspace'||(e.altKey&&k==='ArrowLeft')){ e.preventDefault(); navTo(null,'back','key'); }
+  else if(e.altKey&&k==='ArrowRight'){ e.preventDefault(); navTo(null,'forward','key'); }
+  else if(e.altKey&&k==='ArrowUp'){ e.preventDefault(); if(S.cwd.parent) navTo(S.cwd.parent,'up','key'); }
+});
+
+/* =========================================================
+   진행
+   ========================================================= */
+function roundDone(){
+  lock=true; sfx.ok(); idx++; progress(); hint('맞아요! 잘했어요 👍');
+  const f=document.createElement('div'); f.className='flash'; f.innerHTML='<span>✓</span>'; ex.appendChild(f);
+  tm=setTimeout(()=>{ if(idx>=tasks.length) win(); else loadRound(); },1100);
+}
+function loadRound(){
+  clearTimeout(tm); lock=false; hideMenu(); closeViewer();
+  $$('.flash',ex).forEach(f=>f.remove());
+  buildFS();
+  task=tasks[idx]();
+  setKindUI(task.kind); ui(task); progress();
+  task.setup(); render();
+}
+function start(){
+  clearTimeout(tm); over=false;
+  const old=$('.win-ov',stage); if(old) old.remove();
+  tasks=buildTasks(mode); idx=0;
+  $$('.chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===mode)));
+  loadRound();
+}
+function nextMode(){ mode=MODES[(MODES.indexOf(mode)+1)%MODES.length]; start(); }
+function win(){
+  over=true; sfx.win(); hint('모두 성공했어요! 🎉');
+  const el=document.createElement('div'); el.className='win-ov';
+  const name=mode==='mixed'?'섞어서':KINDS[mode].ko;
+  el.innerHTML=`<div class="win-card"><div class="we">🎉</div><h3 class="display">잘했어요!</h3><p>${name} 연습을 마쳤어요.</p><div class="win-actions"><button data-a="again">다시 하기</button><button class="main" data-a="next">다음 연습</button></div></div>`;
+  stage.appendChild(el);
+  $('[data-a=again]',el).addEventListener('click',()=>start());
+  $('[data-a=next]',el).addEventListener('click',()=>nextMode());
+}
+$('#againBtn').addEventListener('click',e=>{e.currentTarget.blur();start()});
+
+/* =========================================================
+   문제 만들기
+   ========================================================= */
+const last=p=>p.split('/').pop();
+/* ----- 열기 ----- */
+function tOpen(path,mission){
+  return {kind:'open',hl:'list',nav:['open','up','back'],openVia:'dbl',
+    navMsg:'이번에는 폴더를 더블클릭해서 열어요.',openMsg:'이번에는 더블클릭으로 열어요. 그림을 빠르게 두 번 클릭해요.',
+    mission,tip:'폴더 그림을 빠르게 두 번 클릭(더블클릭)하면 안으로 들어가요.',hint:'폴더 그림을 더블클릭하세요.',
+    setup(){startAt('')},
+    onEvent(a,c){return a==='nav'&&c.node===P(path)}};
+}
+function tOpenFile(dir,file,mission){
+  return {kind:'open',hl:'list',nav:['open','up','back'],openVia:'dbl',
+    navMsg:'이번에는 폴더를 더블클릭해서 열어요.',openMsg:'이번에는 더블클릭으로 열어요. 그림을 빠르게 두 번 클릭해요.',
+    mission,tip:'파일도 더블클릭하면 열려요.',hint:'폴더를 차례로 열고, 마지막에 파일을 더블클릭하세요.',
+    setup(){startAt('')},
+    onEvent(a,c){return a==='openfile'&&c.node.name===file&&c.node.parent===P(dir)}};
+}
+function tOpenEnter(path){
+  return {kind:'open',hl:'list',nav:['open','up','back'],openVia:'enter',
+    navMsg:'이번에는 폴더를 한 번 클릭한 뒤 Enter 키로 열어요.',openMsg:'이번에는 폴더를 한 번 클릭해서 선택하고, 키보드의 Enter 키를 눌러요.',
+    mission:`"${last(path)}" 폴더를 한 번 클릭해서 고른 뒤, 키보드의 Enter 키로 열어요.`,
+    tip:'Enter 키도 더블클릭처럼 폴더를 열어 줘요.',hint:'폴더를 한 번 클릭하고 Enter 키를 누르세요.',
+    setup(){startAt('')},
+    onEvent(a,c){return a==='nav'&&c.node===P(path)}};
+}
+/* ----- 이동 ----- */
+function tUp(from,to,mission){
+  return {kind:'nav',hl:'up',nav:['up'],navMsg:'이번에는 위로(↑) 버튼을 눌러요.',
+    mission,tip:'위로(↑) 버튼은 지금 폴더를 감싸고 있는 바깥 폴더로 올라가게 해요.',hint:'왼쪽 위의 ↑ 버튼을 누르세요.',
+    setup(){startAt(from)},
+    onEvent(a,c){return a==='nav'&&c.node===P(to)}};
+}
+function tBackFwd(){
+  return {kind:'nav',hl:'back',nav:['back'],navMsg:'이번에는 뒤로(←) 버튼을 눌러요.',step:0,
+    mission:'뒤로(←) 버튼을 눌러 방금 지나온 "문서" 폴더까지 돌아가요.',
+    tip:'뒤로(←)는 방금 있던 곳으로, 앞으로(→)는 다시 그쪽으로 가는 버튼이에요.',hint:'왼쪽 위의 ← 버튼을 누르세요.',
+    setup(){startAt('문서/학교/과제')},
+    onEvent(a,c){
+      if(this.step===0&&a==='nav'&&c.node===P('문서')){
+        this.step=1; this.nav=['forward']; this.navMsg='이번에는 앞으로(→) 버튼을 눌러요.';
+        ui({mission:'좋아요! 이번에는 앞으로(→) 버튼을 눌러 "학교" 폴더로 다시 가요.',hint:'→ 버튼을 누르세요.',hl:'fwd'}); return false;
+      }
+      return this.step===1&&a==='nav'&&c.node===P('문서/학교');
+    }};
+}
+function tAddr(from,to,mission){
+  return {kind:'nav',hl:'addr',nav:['addr'],navMsg:'이번에는 위쪽 주소 표시줄의 폴더 이름을 눌러요.',
+    mission,tip:'주소 표시줄의 이름을 누르면 그 폴더로 바로 점프해요.',hint:'위쪽 주소 표시줄에서 폴더 이름을 누르세요.',
+    setup(){startAt(from)},
+    onEvent(a,c){return a==='nav'&&c.node===P(to)}};
+}
+function tSide(from,to,mission){
+  return {kind:'nav',hl:'side',nav:['side'],navMsg:'이번에는 왼쪽 탐색 창의 이름을 눌러요.',
+    mission,tip:'왼쪽 탐색 창에는 자주 쓰는 폴더가 모여 있어요.',hint:'왼쪽 탐색 창에서 폴더 이름을 누르세요.',
+    setup(){startAt(from)},
+    onEvent(a,c){return a==='nav'&&c.node===P(to)}};
+}
+function tFree(from,to,mission){
+  return {kind:'nav',hl:'up addr side',mission,tip:'위로 버튼, 주소 표시줄, 왼쪽 탐색 창, 폴더 더블클릭 모두 쓸 수 있어요.',hint:'편한 방법으로 이동해 보세요.',
+    setup(){startAt(from)},
+    onEvent(a,c){return a==='nav'&&c.node===P(to)}};
+}
+/* ----- 찾기 ----- */
+function tFindFile(dir,file,mission){
+  return {kind:'find',hl:'list',mission,tip:'폴더를 하나씩 열어 보며 찾아요. 길을 잃으면 위로(↑)나 뒤로(←)를 눌러요.',hint:'폴더를 열어 파일을 찾아 더블클릭하세요.',
+    setup(){startAt('')},
+    onEvent(a,c){return a==='openfile'&&c.node.name===file&&c.node.parent===P(dir)}};
+}
+function tSearchFile(path,q,mission){
+  return {kind:'find',hl:'search',nav:['open','up','back'],needSearch:true,
+    navMsg:'이번에는 검색창을 써요.',
+    mission,tip:'검색창은 지금 폴더와 그 안의 모든 폴더에서 이름을 찾아 줘요.',hint:`오른쪽 위 검색창에 "${q}"를 써 보세요.`,
+    setup(){startAt('')},
+    onEvent(a,c){return a==='openfile'&&c.node===P(path)}};
+}
+function tSearchFolder(path,q,mission){
+  return {kind:'find',hl:'search',nav:['open','up','back'],needSearch:true,
+    mission,tip:'검색 결과에서 폴더를 더블클릭하면 그 폴더로 들어가요.',hint:`오른쪽 위 검색창에 "${q}"를 써 보세요.`,
+    setup(){startAt('')},
+    onEvent(a,c){return a==='nav'&&c.node===P(path)}};
+}
+/* ----- 만들기 ----- */
+function tNew(dir,name,viaCtx){
+  return {kind:'create',hl:viaCtx?'list':'new',mod:['newfolder'],
+    mission:viaCtx?`"${last(dir)}" 폴더의 빈 곳을 마우스 오른쪽 버튼으로 눌러 새 폴더를 만들고, 이름을 "${name}"으로 해요.`:`"${last(dir)}" 폴더 안에서 새 폴더를 만들고, 이름을 "${name}"(으)로 바꿔요.`,
+    tip:viaCtx?'빈 곳을 오른쪽 클릭하면 메뉴가 열려요. "새로 만들기 › 폴더"를 골라요.':'위쪽 "새 폴더" 버튼을 누르고, 이름을 쓴 뒤 Enter 키를 눌러요.',
+    hint:viaCtx?'빈 곳에서 마우스 오른쪽 버튼을 누르세요.':'"📁 새 폴더" 버튼을 누르세요.',
+    setup(){startAt(dir)},
+    can(a,c){
+      if(a==='newfolder'){
+        if(S.cwd!==P(dir)) return `"${last(dir)}" 폴더 안에서 만들어요.`;
+        if(viaCtx&&c.via!=='ctx') return '이번에는 빈 곳에서 마우스 오른쪽 버튼을 눌러 메뉴의 "새 폴더"를 골라요.';
+      }
+      if(a==='commit'&&c.name!==name) return `폴더 이름을 "${name}"(으)로 써 주세요.`;
+      return '';
+    },
+    onEvent(a,c){return a==='newfolder'&&c.name===name&&S.cwd===P(dir)}};
+}
+function tRename(dir,oldN,newN,viaCtx){
+  return {kind:'create',hl:viaCtx?'list':'rename',mod:['rename'],
+    mission:viaCtx?`"${oldN}"을 마우스 오른쪽 버튼으로 눌러 이름을 "${newN}"(으)로 바꿔요.`:`"${oldN}"의 이름을 "${newN}"(으)로 바꿔요.`,
+    tip:viaCtx?'파일 위에서 오른쪽 클릭 → "이름 바꾸기". 확장자(.jpg)는 그대로 두고 앞부분만 바꿔요.':'파일을 클릭하고 "이름 바꾸기" 버튼이나 F2 키를 눌러요. 확장자는 그대로 두세요.',
+    hint:'파일을 한 번 클릭해서 선택한 뒤 이름을 바꿔요.',
+    setup(){startAt(dir)},
+    can(a,c){
+      if(a==='rename'){
+        if(c.node.name!==oldN) return `"${oldN}"을(를) 선택해서 이름을 바꿔요.`;
+        if(viaCtx&&c.via!=='ctx') return '이번에는 파일을 마우스 오른쪽 버튼으로 눌러 메뉴의 "이름 바꾸기"를 골라요.';
+      }
+      if(a==='commit'&&c.name!==newN) return `새 이름은 "${newN}"이에요. 확장자(.${ext(oldN)})는 지우지 말고 그대로 둬요.`;
+      return '';
+    },
+    onEvent(a,c){return a==='rename'&&c.node.name===newN&&c.node.parent===P(dir)}};
+}
+/* ----- 정리하기 ----- */
+function tDelete(dir,names){
+  const multi=names.length>1;
+  return {kind:'organize',hl:'delete',mod:['delete'],
+    mission:multi?`"${names.join('", "')}" 두 파일을 함께 골라서 삭제해요.`:`"${names[0]}" 파일을 선택하고 삭제해요.`,
+    tip:multi?'첫 파일을 클릭한 뒤, Ctrl 키를 누른 채 다른 파일을 클릭하면 여러 개를 함께 고를 수 있어요.':'파일을 한 번 클릭해서 고른 뒤 "삭제" 버튼이나 Delete 키를 눌러요.',
+    hint:multi?'Ctrl 키를 누른 채로 두 파일을 클릭하세요.':'파일을 한 번 클릭해서 선택하세요.',
+    setup(){startAt(dir)},
+    can(a,c){
+      if(a!=='delete') return '';
+      const got=c.nodes.map(n=>n.name).sort().join('|'), want=names.slice().sort().join('|');
+      if(got===want&&c.nodes.every(n=>n.parent===P(dir))) return '';
+      if(multi&&c.nodes.length===1&&names.includes(c.nodes[0].name)) return 'Ctrl 키를 누른 채 다른 파일도 클릭하면 함께 선택돼요. 두 파일이 모두 선택되어야 해요.';
+      return `이 파일은 지우면 안 돼요! "${names.join('", "')}"만 골라요.`;
+    },
+    onEvent(a){return a==='delete'}};
+}
+function tCopyPaste(){
+  const src='사진/고양이.jpg', dst='문서/가족';
+  return {kind:'organize',hl:'copy',mod:['copy','paste'],step:0,
+    mission:'"고양이.jpg"를 복사해서, "문서 → 가족" 폴더에 붙여넣어요.',
+    tip:'복사(📑) 후에는 원래 파일이 그대로 남아요. Ctrl+C(복사), Ctrl+V(붙여넣기)도 쓸 수 있어요.',
+    hint:'"사진" 폴더에서 고양이.jpg를 선택하고 복사하세요.',
+    setup(){startAt('사진')},
+    can(a,c){
+      if(a==='copy'&&!(c.nodes.length===1&&c.nodes[0]===P(src))) return '"고양이.jpg" 한 개만 골라서 복사해요.';
+      if(a==='paste'&&c.to!==P(dst)) return '붙여넣을 곳은 "문서 → 가족" 폴더예요. 그 폴더로 이동한 뒤에 붙여넣어요.';
+      return '';
+    },
+    onEvent(a,c){
+      if(a==='copy'){ this.step=1; ui({mission:'좋아요! 이번에는 "문서 → 가족" 폴더로 가서 붙여넣어요.',hint:'폴더를 옮긴 뒤 "📋 붙여넣기"를 누르세요.',hl:'paste'}); return false; }
+      return a==='paste'&&c.to===P(dst)&&c.mode==='copy';
+    }};
+}
+function tCutPaste(){
+  const src='음악/신나는 노래.mp3', dst='음악/동요';
+  return {kind:'organize',hl:'cut',mod:['cut','paste'],step:0,
+    mission:'"신나는 노래.mp3"를 잘라내서, "동요" 폴더로 옮겨요.',
+    tip:'잘라내기(✂️) 후 붙여넣으면 파일이 "이사"를 가요. 원래 자리에서는 사라져요.',
+    hint:'파일을 선택하고 "✂️ 잘라내기"를 누르세요.',
+    setup(){startAt('음악')},
+    can(a,c){
+      if(a==='cut'&&!(c.nodes.length===1&&c.nodes[0]===P(src))) return '"신나는 노래.mp3" 한 개만 골라서 잘라내요.';
+      if(a==='paste'&&c.to!==P(dst)) return '붙여넣을 곳은 "동요" 폴더예요. 그 폴더를 열고 붙여넣어요.';
+      return '';
+    },
+    onEvent(a,c){
+      if(a==='cut'){ this.step=1; ui({mission:'좋아요! 이번에는 "동요" 폴더를 열고 붙여넣어요.',hint:'"동요" 폴더를 열고 "📋 붙여넣기"를 누르세요.',hl:'paste'}); return false; }
+      return a==='paste'&&c.to===P(dst)&&c.mode==='cut';
+    }};
+}
+function tDrag(){
+  return {kind:'organize',hl:'side list',mod:['move'],
+    mission:'"강아지.jpg"를 끌어서 왼쪽 탐색 창의 "사진" 폴더 위에 놓아요.',
+    tip:'파일을 누른 채로 끌어서 폴더 위에 놓고 손을 떼면 그 폴더로 옮겨져요.',
+    hint:'강아지.jpg를 누른 채 끌어서 왼쪽 "사진"에 놓으세요.',
+    setup(){startAt('다운로드')},
+    can(a,c){
+      if(a!=='move') return '';
+      if(!(c.nodes.length===1&&c.nodes[0].name==='강아지.jpg')) return '"강아지.jpg"만 끌어서 옮겨요.';
+      if(c.to!==P('사진')) return '"사진" 폴더 위에 놓아요.';
+      return '';
+    },
+    onEvent(a,c){return a==='move'&&c.to===P('사진')}};
+}
+
+const TASKS={
+  open:[
+    ()=>tOpen('문서','내 PC에서 "문서" 폴더를 더블클릭해서 열어요.'),
+    ()=>tOpen('사진/여행','"사진" 폴더를 열고, 그 안의 "여행" 폴더까지 차례로 열어요.'),
+    ()=>tOpen('문서/학교/과제','"문서" → "학교" → "과제" 순서로 폴더를 열어 "과제" 폴더까지 가요.'),
+    ()=>tOpenFile('사진/여행/제주도','바다.jpg','"사진 → 여행 → 제주도" 폴더로 들어가서 "바다.jpg" 파일을 더블클릭해 열어요.'),
+    ()=>tOpenEnter('다운로드')
+  ],
+  nav:[
+    ()=>tUp('사진/여행/제주도','사진','위로(↑) 버튼을 눌러서 "사진" 폴더까지 올라가요.'),
+    ()=>tUp('문서/학교/과제','','위로(↑) 버튼을 눌러서 맨 위 "내 PC"까지 올라가요.'),
+    ()=>tBackFwd(),
+    ()=>tAddr('사진/여행/제주도','사진','위쪽 주소 표시줄에서 "사진"을 눌러 한 번에 이동해요.'),
+    ()=>tSide('문서/학교/과제','다운로드','왼쪽 탐색 창에서 "다운로드"를 눌러 한 번에 이동해요.'),
+    ()=>tFree('사진/여행/제주도','음악/동요','원하는 방법으로 "음악 → 동요" 폴더까지 가 보세요.')
+  ],
+  find:[
+    ()=>tFindFile('다운로드','영수증.pdf','"다운로드" 폴더 안에서 "영수증.pdf" 파일을 찾아 더블클릭해요.'),
+    ()=>tFindFile('사진/여행/제주도','한라산.jpg','"사진" 폴더 안 어딘가에 "한라산.jpg"가 있어요. 폴더를 차례로 열어 찾아요.'),
+    ()=>tSearchFile('음악/동요/학교종.mp3','학교종','오른쪽 위 검색창에 "학교종"을 써서 파일을 찾은 뒤, 더블클릭해서 열어요.'),
+    ()=>tSearchFile('문서/학교/과제/독후감.docx','독후감','폴더를 일일이 열지 말고, 검색창에 "독후감"을 써서 파일을 찾아 열어요.'),
+    ()=>tSearchFolder('사진/생일파티','생일','검색창에 "생일"을 쓰고, 결과에 나온 "생일파티" 폴더를 더블클릭해서 열어요.')
+  ],
+  create:[
+    ()=>tNew('문서','연습',false),
+    ()=>tRename('문서','일기.txt','나의 일기.txt',false),
+    ()=>tNew('바탕 화면','숙제',true),
+    ()=>tRename('사진','고양이.jpg','야옹이.jpg',true)
+  ],
+  organize:[
+    ()=>tDelete('다운로드',['설치파일.zip']),
+    ()=>tCopyPaste(),
+    ()=>tCutPaste(),
+    ()=>tDrag(),
+    ()=>tDelete('다운로드',['영수증.pdf','설치파일.zip'])
+  ]
+};
+function buildTasks(m){
+  if(m!=='mixed') return TASKS[m].slice();
+  const kinds=Object.keys(TASKS);
+  const out=kinds.map(k=>pick(TASKS[k]));
+  const rest=shuffle(kinds.reduce((a,k)=>a.concat(TASKS[k]),[]).filter(f=>!out.includes(f)));
+  return shuffle(out.concat(rest.slice(0,3)));
+}
+
+start();
+})();
+</script>
+</body>
+</html>
